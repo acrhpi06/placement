@@ -19,6 +19,8 @@ const interviewRoutes = require('./routes/interviewRoutes');
 
 const app = express();
 const isVercel = process.env.VERCEL === '1';
+app.set('trust proxy', 1);
+
 const noopIo = {
   emit: () => {},
   to: () => noopIo
