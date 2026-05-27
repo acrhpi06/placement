@@ -65,8 +65,11 @@ const getDashboardStats = async (req, res) => {
 const getAllStudents = async (req, res) => {
   try {
     const { search, department, min_cgpa, max_cgpa } = req.query;
-    let queryStr = `SELECT s.*, ad.cgpa, ad.tenth_percentage, ad.twelfth_percentage,
-                  ad.active_backlogs, ad.skills
+    let queryStr = `SELECT s.id, s.name, s.email, s.roll_number, s.department,
+                  s.year_of_passing, s.phone, s.gender, s.date_of_birth,
+                  s.address, s.profile_complete, s.is_active, s.created_at,
+                  ad.cgpa, ad.tenth_percentage, ad.twelfth_percentage,
+                  ad.active_backlogs, ad.total_backlogs, ad.gap_years, ad.skills
                   FROM students s
                   LEFT JOIN academic_details ad ON s.id = ad.student_id
                   WHERE 1=1`;
@@ -101,7 +104,14 @@ const getAllStudents = async (req, res) => {
 const getStudentById = async (req, res) => {
   try {
     const [rows] = await execute(
-      `SELECT s.*, ad.* FROM students s
+      `SELECT s.id, s.name, s.email, s.roll_number, s.department,
+       s.year_of_passing, s.phone, s.gender, s.date_of_birth, s.address,
+       s.profile_complete, s.is_active, s.created_at,
+       ad.id AS academic_id, ad.tenth_percentage, ad.twelfth_percentage,
+       ad.cgpa, ad.active_backlogs, ad.total_backlogs, ad.gap_years,
+       ad.skills, ad.certifications, ad.projects, ad.internships,
+       ad.resume_url, ad.updated_at AS academics_updated_at
+       FROM students s
        LEFT JOIN academic_details ad ON s.id = ad.student_id
        WHERE s.id = ?`,
       [req.params.id]

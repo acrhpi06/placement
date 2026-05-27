@@ -1,10 +1,12 @@
 const sqlite3 = require('better-sqlite3');
 const path = require('path');
 const fs = require('fs');
+const bcrypt = require('bcryptjs');
 
-const dbPath = path.join(__dirname, 'database/placement.db');
-if (!fs.existsSync(path.dirname(dbPath))) {
-  fs.mkdirSync(path.dirname(dbPath), { recursive: true });
+const dbPath = path.join(__dirname, '../database/placement.db');
+const dbDir = path.dirname(dbPath);
+if (!fs.existsSync(dbDir)) {
+  fs.mkdirSync(dbDir, { recursive: true });
 }
 
 const db = new sqlite3(dbPath);
@@ -145,30 +147,49 @@ console.log('SQLite Schema Created');
 
 // Insert Sample Data
 const insertData = () => {
-  // Admin (password: admin123)
-  db.prepare("INSERT OR IGNORE INTO admins (name, email, password, role) VALUES (?, ?, ?, ?)").run(
-    'Super Admin', 'admin@placement.com', '$2b$10$rOzJqB1H8QK6mN9P2L5YwO8vKqE4mX3nR7sT1uV6yW0xA9cD2eF', 'superadmin'
-  );
+  try {
+    const adminPasswordHash = bcrypt.hashSync('admin123', 10);
+    const studentPasswordHash = bcrypt.hashSync('student123', 10);
 
-  // Sample Students (password: student123)
-  const students = [
-    ['Arjun Sharma', 'arjun@test.com', '$2b$10$rOzJqB1H8QK6mN9P2L5YwO8vKqE4mX3nR7sT1uV6yW0xA9cD2eF', 'CSE2024001', 'Computer Science', 2024, '9876543210', 'Male'],
-    ['Priya Patel', 'priya@test.com', '$2b$10$rOzJqB1H8QK6mN9P2L5YwO8vKqE4mX3nR7sT1uV6yW0xA9cD2eF', 'IT2024002', 'Information Technology', 2024, '9876543211', 'Female']
-  ];
+    // Admin (password: admin123)
+    db.prepare("INSERT OR IGNORE INTO admins (name, email, password, role) VALUES (?, ?, ?, ?)").run(
+      'Super Admin', 'admin@placement.com', adminPasswordHash, 'superadmin'
+    );
+    console.log('✓ Admin seeded');
 
-  for (const s of students) {
-    const res = db.prepare("INSERT OR IGNORE INTO students (name, email, password, roll_number, department, year_of_passing, phone, gender) VALUES (?, ?, ?, ?, ?, ?, ?, ?)").run(...s);
-    if (res.changes > 0) {
-      db.prepare("INSERT INTO academic_details (student_id, cgpa) VALUES (?, ?)").run(res.lastInsertRowid, 8.5);
+    // Sample Students (password: student123 for testing)
+    const students = [
+      ['Arjun Sharma', 'arjun@test.com', studentPasswordHash, 'CSE2024001', 'Computer Science', 2024, '9876543210', 'Male'],
+      ['Priya Patel', 'priya@test.com', studentPasswordHash, 'IT2024002', 'Information Technology', 2024, '9876543211', 'Female'],
+      ['Rahul Kumar', 'rahul@test.com', studentPasswordHash, 'ECE2024003', 'Electronics', 2024, '9876543212', 'Male']
+    ];
+
+    for (const s of students) {
+      const res = db.prepare("INSERT OR IGNORE INTO students (name, email, password, roll_number, department, year_of_passing, phone, gender) VALUES (?, ?, ?, ?, ?, ?, ?, ?)").run(...s);
+      if (res.changes > 0) {
+        db.prepare("INSERT INTO academic_details (student_id, cgpa) VALUES (?, ?)").run(res.lastInsertRowid, 8.5);
+      }
     }
+    console.log('✓ Students seeded');
+
+    // Companies
+    db.prepare("INSERT OR IGNORE INTO companies (company_name, company_code, job_role, package_lpa, status) VALUES (?, ?, ?, ?, ?)").run(
+      'Microsoft', 'MSFT', 'Software Engineer', 45.0, 'Active'
+    );
+    db.prepare("INSERT OR IGNORE INTO companies (company_name, company_code, job_role, package_lpa, status) VALUES (?, ?, ?, ?, ?)").run(
+      'Google', 'GOOGL', 'SDE-1', 52.0, 'Active'
+    );
+    console.log('✓ Companies seeded');
+
+    console.log('\n✅ Database initialized successfully!');
+    console.log('\nTest Credentials:');
+    console.log('Admin Email: admin@placement.com');
+    console.log('Student Email: arjun@test.com or priya@test.com or rahul@test.com');
+    console.log('Admin Password: admin123');
+    console.log('Student Password: student123\n');
+  } catch (error) {
+    console.error('Error seeding data:', error.message);
   }
-
-  // Companies
-  db.prepare("INSERT OR IGNORE INTO companies (company_name, company_code, job_role, package_lpa, status) VALUES (?, ?, ?, ?, ?)").run(
-    'Microsoft', 'MSFT', 'Software Engineer', 45.0, 'Active'
-  );
-
-  console.log('Sample Data Inserted');
 };
 
 insertData();

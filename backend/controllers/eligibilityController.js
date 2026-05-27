@@ -1,4 +1,4 @@
-const { execute, dbType } = require('../config/db');
+const { execute, getDbType } = require('../config/db');
 
 const checkEligibility = async (req, res) => {
   try {
@@ -243,7 +243,7 @@ const setCriteria = async (req, res) => {
       allowed_departments, allowed_year_of_passing, required_skills
     } = req.body;
 
-    if (dbType === 'mysql') {
+    if (getDbType() === 'mysql') {
       await execute(
         `INSERT INTO eligibility_criteria 
          (company_id, min_cgpa, min_tenth, min_twelfth, max_active_backlogs,
@@ -270,7 +270,7 @@ const setCriteria = async (req, res) => {
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
          ON CONFLICT(company_id) DO UPDATE SET
          min_cgpa = excluded.min_cgpa, min_tenth = excluded.min_tenth,
-         min_twelfth = excluded.excluded.min_twelfth, max_active_backlogs = excluded.max_active_backlogs,
+         min_twelfth = excluded.min_twelfth, max_active_backlogs = excluded.max_active_backlogs,
          max_total_backlogs = excluded.max_total_backlogs, max_gap_years = excluded.max_gap_years,
          allowed_departments = excluded.allowed_departments,
          allowed_year_of_passing = excluded.allowed_year_of_passing,

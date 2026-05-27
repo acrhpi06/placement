@@ -25,22 +25,30 @@ export default function SetCriteria() {
 
   const departments = ['Computer Science', 'Information Technology', 'Electronics', 'Mechanical', 'Civil', 'Electrical'];
 
+  const toCriteriaForm = (data = {}) => ({
+    min_cgpa: data.min_cgpa ?? 6.0,
+    min_tenth: data.min_tenth ?? 60,
+    min_twelfth: data.min_twelfth ?? 60,
+    max_active_backlogs: data.max_active_backlogs ?? 0,
+    max_total_backlogs: data.max_total_backlogs ?? 0,
+    max_gap_years: data.max_gap_years ?? 0,
+    allowed_departments: data.allowed_departments ?? '',
+    allowed_year_of_passing: data.allowed_year_of_passing ?? '2024',
+    required_skills: data.required_skills ?? ''
+  });
+
   useEffect(() => {
     fetchCriteria();
   }, [companyId]);
 
   const fetchCriteria = async () => {
     try {
-      const [compRes, eligRes] = await Promise.all([
-        api.get(`/companies/${companyId}`),
-        api.get(`/eligibility/check/1`) // Just to see if criteria exists, ignoring error
-      ]);
+      const compRes = await api.get(`/companies/${companyId}`);
       setCompany(compRes.data.data);
-      if (compRes.data.data.min_cgpa !== undefined) {
-        setFormData(compRes.data.data);
-      }
+      setFormData(toCriteriaForm(compRes.data.data));
     } catch (error) {
       console.error(error);
+      toast.error('Failed to load company criteria');
     } finally {
       setLoading(false);
     }
@@ -61,11 +69,14 @@ export default function SetCriteria() {
     e.preventDefault();
     setSaving(true);
     try {
-      await api.post('/eligibility/set-criteria', { ...formData, company_id: companyId });
+      await api.post('/eligibility/set-criteria', {
+        ...formData,
+        company_id: Number(companyId)
+      });
       toast.success('Eligibility criteria saved successfully!');
       navigate('/admin/companies');
     } catch (error) {
-      toast.error('Failed to save criteria');
+      toast.error(error.response?.data?.message || 'Failed to save criteria');
     } finally {
       setSaving(false);
     }
