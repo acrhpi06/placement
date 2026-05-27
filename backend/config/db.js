@@ -39,7 +39,10 @@ const initDb = async () => {
 };
 
 const useSqlite = () => {
-  const dbPath = path.join(__dirname, '../../database/placement.db');
+  const dbPath = process.env.SQLITE_DB_PATH ||
+    (process.env.VERCEL === '1'
+      ? path.join('/tmp', 'placement.db')
+      : path.join(__dirname, '../../database/placement.db'));
   
   // Ensure database directory exists
   const dbDir = path.dirname(dbPath);

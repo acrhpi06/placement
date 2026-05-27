@@ -8,8 +8,15 @@ export const SocketProvider = ({ children }) => {
   const [socket, setSocket] = useState(null);
   const [isConnected, setIsConnected] = useState(false);
   const { user } = useAuth();
+  const socketEnabled = import.meta.env.DEV || import.meta.env.VITE_ENABLE_SOCKET === 'true';
 
   useEffect(() => {
+    if (!socketEnabled) {
+      setSocket(null);
+      setIsConnected(false);
+      return;
+    }
+
     if (user) {
       const newSocket = io('/', {
         transports: ['websocket', 'polling'],
@@ -36,7 +43,7 @@ export const SocketProvider = ({ children }) => {
         newSocket.disconnect();
       };
     }
-  }, [user]);
+  }, [user, socketEnabled]);
 
   return (
     <SocketContext.Provider value={{ socket, isConnected }}>
